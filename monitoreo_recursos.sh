@@ -139,3 +139,23 @@ echo "Respaldo realizado exitosamente y enviado a $SERVIDOR."
 ???????????????????????
 
 * * * * * /bin/bash /home/usuario/limpieza_remota.sh >> /home/usuario/limpieza_remota.log 2>&1
+
+
+???????????????????
+
+#!/bin/bash
+
+# Ruta del directorio de respaldo en el servidor local
+DIR_REMOTO="/home/usuario/respaldo"  # Directorio remoto de respaldo
+
+# Contar el número de archivos en el directorio
+NUM_ARCHIVOS=$(ls -1 $DIR_REMOTO | wc -l)
+
+# Si hay 5 o más archivos, eliminar los más antiguos
+if [ $NUM_ARCHIVOS -ge 5 ]; then
+    # Eliminar los archivos más antiguos (ordenados por fecha de creación)
+    echo "Hay $NUM_ARCHIVOS archivos. Se eliminarán los más antiguos..."
+    ls -t $DIR_REMOTO | tail -n +6 | xargs rm -rf
+else
+    echo "El número de archivos es menor a 5. No se eliminará nada."
+fi
