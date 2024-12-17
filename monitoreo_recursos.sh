@@ -115,4 +115,23 @@ tar -czvf $ARCHIVO_RESPALDO $DIR_LOCAL
 # Sincronizar con el servidor remoto usando rsync
 rsync -avz --delete $ARCHIVO_RESPALDO $USUARIO@$SERVIDOR:$DIR_REMOTO/backup_$FECHA.tar.gz
 
+??????????????????????
+
+#!/bin/bash
+
+# Variables de configuración
+DIR_REMOTO="/home/usuario/respaldo"  # Directorio donde se guardan los backups
+MAX_RESPALDOS=5                     # Máximo número permitido de respaldos
+
+# Contar cuántos respaldos hay actualmente
+NUM_RESPALDOS=$(ls -t $DIR_REMOTO/backup_*.tar.gz 2>/dev/null | wc -l)
+
+# Si hay más de $MAX_RESPALDOS, eliminar los más antiguos
+if [ $NUM_RESPALDOS -gt $MAX_RESPALDOS ]; then
+    echo "Se encontraron $NUM_RESPALDOS respaldos. Eliminando los más antiguos..."
+    ls -t $DIR_REMOTO/backup_*.tar.gz | tail -n +$(($MAX_RESPALDOS + 1)) | xargs rm -f
+    echo "Limpieza completada."
+fi
+
+
 echo "Respaldo realizado exitosamente y enviado a $SERVIDOR."
