@@ -92,3 +92,27 @@ echo "Backup completado correctamente."
 capturar_datos &
 
 echo "La captura de datos se está ejecutando en segundo plano"
+
+??????????????????????????
+
+#!/bin/bash
+
+# Variables de configuración
+DIR_LOCAL="/home/usuario/directorio_respaldo"  # Directorio local a respaldar
+FECHA=$(date +"%Y%m%d")                       # Fecha actual en formato YYYYMMDD
+USUARIO="usuario"                             # Usuario del servidor remoto
+SERVIDOR="servidor_remoto"                    # Dirección del servidor remoto
+DIR_REMOTO="/home/usuario/respaldo"           # Directorio remoto para backups
+
+# Crear un archivo con la dirección IP local en el directorio local
+IP_LOCAL=$(hostname -I | awk '{print $1}')
+echo $IP_LOCAL > $DIR_LOCAL/servidor.txt
+
+# Comprimir el directorio local
+ARCHIVO_RESPALDO="$DIR_LOCAL/$FECHA.tar.gz"
+tar -czvf $ARCHIVO_RESPALDO $DIR_LOCAL
+
+# Sincronizar con el servidor remoto usando rsync
+rsync -avz --delete $ARCHIVO_RESPALDO $USUARIO@$SERVIDOR:$DIR_REMOTO/backup_$FECHA.tar.gz
+
+echo "Respaldo realizado exitosamente y enviado a $SERVIDOR."
