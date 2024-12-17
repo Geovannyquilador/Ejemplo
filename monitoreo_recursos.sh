@@ -49,6 +49,45 @@ EOFMarker
     echo "Gráfica generada en $GRAPH"
 }
 
+?????????????????????????????
+
+#!/bin/bash
+
+# Definición de variables
+DIR_REMOTO="/home/usuario/respaldo"    # Ruta del directorio remoto
+DIR_LOCAL="/home/usuario/directorio_respaldo"   # Ruta local para el respaldo
+FECHA=$(date +"%Y%m%d")                # Fecha en formato YYYYMMDD
+MAX_RESPALDOS=5                       # Número máximo de respaldos permitidos
+
+# Crear un archivo con la dirección IP local en el directorio local
+IP_LOCAL=$(hostname -I | awk '{print $1}')
+echo $IP_LOCAL > $DIR_LOCAL/servidor.txt
+
+# Comprimir el directorio local a respaldar
+tar -czvf $DIR_LOCAL/$FECHA.gz $DIR_LOCAL
+
+# Contar los respaldos existentes en el directorio local
+NUM_RESPALDOS=$(ls -d $DIR_LOCAL/*/ 2>/dev/null | wc -l)
+
+# Si existen más de 5 respaldos, eliminar los más antiguos
+if [ $NUM_RESPALDOS -ge $MAX_RESPALDOS ]; then
+    echo "Existen $NUM_RESPALDOS respaldos, eliminando los más antiguos..."
+    ls -dt $DIR_LOCAL/*/ | tail -n +$(($MAX_RESPALDOS + 1)) | xargs rm -rf
+fi
+
+# Realizar el backup incremental con rsync al servidor remoto
+USUARIO="usuario"
+SERVIDOR="servidor_remoto"
+rsync -avz --delete --link-dest=$DIR_REMOTO/backup_$(date --date="yesterday" +"%Y%m%d") $DIR_LOCAL $USUARIO@$SERVIDOR:$DIR_REMOTO/backup_$FECHA
+
+# Limpiar la carpeta de backups remotos si supera el límite
+BACKUPS_EN_REMOTO=$(ssh $USUARIO@$SERVIDOR "ls $DIR_REMOTO | grep -c 'backup_'")
+if [ $BACKUPS_EN_REMOTO -gt $MAX_RESPALDOS ]; then
+    ssh $USUARIO@$SERVIDOR "ls -t $DIR_REMOTO/backup_* | tail -n +$(($MAX_RESPALDOS + 1)) | xargs rm -rf"
+fi
+
+echo "Backup completado correctamente."
+
 # Ejecuta la captura de datos en segundo plano
 capturar_datos &
 
